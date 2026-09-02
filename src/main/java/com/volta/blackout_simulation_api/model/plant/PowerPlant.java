@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Table(name = "power_plant")
 @Getter
 @Setter
-public class PowerPlant extends BaseEntity {
+public abstract class PowerPlant extends BaseEntity {
 
     @Column(name = "type")
     @Enumerated(EnumType.STRING)
@@ -41,20 +41,7 @@ public class PowerPlant extends BaseEntity {
     private LocalDateTime restartInitiationTime;
 
     @Column(name = "plant_state")
+    @Enumerated(EnumType.STRING)
     @NotNull(message = "Invalid state. State cannot be null.")
     private PlantState state;
-
-    //Especificas
-    //Renovable
-
-    //como hago para impedir que  sea null si la planta es renovable
-    //@NotBlank(message = "Invalid efficiency. Efficiency has to be between 0.0 and 1.0.")
-    @Column(name = "efficiency")
-    private double efficiency;
-
-    //No renovable
-    //como hago para impedir que sea null si la planta es no renovable renovable
-    @Column(name = "thermal_fuel_type")
-    @NotBlank(message = "Invalid fuel type. Fuel type cannot be null.")
-    private ThermalFuelType thermalFuelType;
 }
