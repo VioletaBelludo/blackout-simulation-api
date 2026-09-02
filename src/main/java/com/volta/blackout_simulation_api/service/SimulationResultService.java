@@ -7,8 +7,7 @@ import com.volta.blackout_simulation_api.model.SimulationResult;
 
 public interface SimulationResultService {
     SimulationResultDto createSimulationResult(SimulationResult simulationResult);
+    SimulationResultDto readSimulationResult(SimulationResult simulationResult);
     SimulationResultDto updateSimulationResult(SimulationResult simulationResult);
-    SimulationResultDto saveSimulationResult(SimulationResult simulationResult);
     SimulationResultDto deleteSimulationResult(SimulationResult simulationResult);
-
 }
