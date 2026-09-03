@@ -186,23 +186,4 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
                 .sum();
     }
 
-    @Override
-    public BlackoutSimulationDto createBlackoutSimulation(BlackoutSimulation blackoutSimulation) {
-        return null;
-    }
-
-    @Override
-    public BlackoutSimulationDto updateBlackoutSimulation(BlackoutSimulation blackoutSimulation) {
-        return null;
-    }
-
-    @Override
-    public BlackoutSimulationDto saveBlackoutSimulation(BlackoutSimulation blackoutSimulation) {
-        return null;
-    }
-
-    @Override
-    public BlackoutSimulationDto deleteBlackoutSimulation(BlackoutSimulation blackoutSimulation) {
-        return null;
-    }
 }
