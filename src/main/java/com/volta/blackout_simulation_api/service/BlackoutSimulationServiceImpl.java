@@ -16,12 +16,16 @@ import java.util.stream.Collectors;
 
 @Service
 public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
-    private PowerPlantRepository powerPlantRepository;
-    private List<PowerPlant> powerPlants = powerPlantRepository.findAll();
-    private MinuteDemandRepository minuteDemandRepository;
-    private List<MinuteDemand> minuteDemands =  minuteDemandRepository.findAll();
     //Tengo que cambiarla de sitio
     private static final double MIN_REQUIRED_STABILITY = 0.7;
+
+    private final PowerPlantRepository powerPlantRepository;
+    private final MinuteDemandRepository minuteDemandRepository;
+
+    public BlackoutSimulationServiceImpl(PowerPlantRepository powerPlantRepository, MinuteDemandRepository minuteDemandRepository) {
+        this.powerPlantRepository = powerPlantRepository;
+        this.minuteDemandRepository = minuteDemandRepository;
+    }
 
     public List<SimulationResult> runSimulation(LocalDateTime blackoutStart){
         List<SimulationResult> results = new ArrayList<>();
@@ -31,7 +35,7 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
             LocalDateTime currentTime = blackoutStart.plusMinutes(minute);
             LocalTime currentTimeOfDay = currentTime.toLocalTime();
             int index = (currentTimeOfDay.toSecondOfDay()) / 60 % 1440;
-            double currentDemand = minuteDemands.get(index).getMegawatts();
+            double currentDemand = minuteDemandRepository.findAll().get(index).getMegawatts();
 
             updatePlantStates(currentTime);
             List<PowerPlant> availablePlants = getAvailableOnlinePlants(currentTimeOfDay);
@@ -135,6 +139,9 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
     }
 
     private void initializeBlackout(LocalDateTime blackoutStart) {
+
+        List<PowerPlant> powerPlants = powerPlantRepository.findAll();
+
         for (int i = 0; i < powerPlants.size(); i++){
             powerPlants.get(i).setState(PlantState.OFFLINE);
             powerPlants.get(i).setRestartInitiationTime(blackoutStart);
@@ -142,6 +149,9 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
     }
 
     private void updatePlantStates(LocalDateTime currentTime){
+
+        List<PowerPlant> powerPlants = powerPlantRepository.findAll();
+
         for (int i = 0; i < powerPlants.size(); i++) {
             if (powerPlants.get(i).getState() == PlantState.OFFLINE &&
                     powerPlants.get(i).getRestartInitiationTime().plus(powerPlants.get(i).getType().getRestartDuration()).isBefore(currentTime)){
@@ -158,7 +168,10 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
 
     private double addGeneration(List<PowerPlant> plants, Map<PowerPlant, Double> map, double demand,
                                  boolean onlyRenewables, boolean onlyNuclear){
+
         double total = map.values().stream().mapToDouble(Double::doubleValue).sum();
+        List<PowerPlant> powerPlants = powerPlantRepository.findAll();
+
         for (int i = 0; i < powerPlants.size(); i++){
             if (map.containsKey(powerPlants.get(i))) continue;
 
