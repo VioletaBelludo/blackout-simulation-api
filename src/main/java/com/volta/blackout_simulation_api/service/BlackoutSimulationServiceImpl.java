@@ -5,8 +5,13 @@ import com.volta.blackout_simulation_api.model.*;
 import com.volta.blackout_simulation_api.model.plant.PlantState;
 import com.volta.blackout_simulation_api.model.plant.PlantType;
 import com.volta.blackout_simulation_api.model.plant.PowerPlant;
+import com.volta.blackout_simulation_api.model.plant.RenewablePlant;
+import com.volta.blackout_simulation_api.repository.BlackoutSimulationRepository;
 import com.volta.blackout_simulation_api.repository.MinuteDemandRepository;
 import com.volta.blackout_simulation_api.repository.PowerPlantRepository;
+import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,17 +21,19 @@ import java.util.stream.Collectors;
 
 @Service
 public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
-    //Tengo que cambiarla de sitio
     private static final double MIN_REQUIRED_STABILITY = 0.7;
 
     private final PowerPlantRepository powerPlantRepository;
     private final MinuteDemandRepository minuteDemandRepository;
 
-    public BlackoutSimulationServiceImpl(PowerPlantRepository powerPlantRepository, MinuteDemandRepository minuteDemandRepository) {
+
+    public BlackoutSimulationServiceImpl(PowerPlantRepository powerPlantRepository,
+                                         MinuteDemandRepository minuteDemandRepository) {
         this.powerPlantRepository = powerPlantRepository;
         this.minuteDemandRepository = minuteDemandRepository;
     }
 
+    @Override
     public List<SimulationResult> runSimulation(LocalDateTime blackoutStart){
         List<SimulationResult> results = new ArrayList<>();
         initializeBlackout(blackoutStart);
@@ -47,8 +54,8 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
                         boolean bRen = b.getType().isRenewable();
 
                         if (aRen && bRen) {
-                            double effA = a.getEfficiency();
-                            double effB = b.getEfficiency();
+                            double effA = ((RenewablePlant) a).getEfficiency();
+                            double effB = ((RenewablePlant) a).getEfficiency();
                             return Double.compare(effB, effA); // Most efficient first
                         } else if (aRen) {
                             return -1;
@@ -64,8 +71,8 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
             for (PowerPlant plant : sortedPlants) {
                 if (totalGenerated >= currentDemand) break;
 
-                double capacity = plant.getType().isRenewable()
-                        ? plant.getMaxCapacityMW() * plant.getEfficiency()
+                double capacity = (plant instanceof RenewablePlant renewablePlant)
+                        ? plant.getMaxCapacityMW() * renewablePlant.getEfficiency()
                         : plant.getMaxCapacityMW();
 
                 double remaining = currentDemand - totalGenerated;
@@ -138,6 +145,7 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
         return results;
     }
 
+
     private void initializeBlackout(LocalDateTime blackoutStart) {
 
         List<PowerPlant> powerPlants = powerPlantRepository.findAll();
@@ -181,8 +189,10 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
                 continue;
             }
 
-            double capacity = powerPlants.get(i).getType().isRenewable()
-                    ? powerPlants.get(i).getMaxCapacityMW() * powerPlants.get(i).getEfficiency(): powerPlants.get(i).getMaxCapacityMW();
+            PowerPlant current = powerPlants.get(i);
+            double capacity = (current instanceof RenewablePlant renewablePlant)
+                    ? current.getMaxCapacityMW() * renewablePlant.getEfficiency()
+                    : current.getMaxCapacityMW();
             double remaining = demand - total;
             if (remaining <= 0) break;
 
@@ -198,5 +208,6 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
                 .mapToDouble(e -> e.getKey().getType().getStability() * e.getValue())
                 .sum();
     }
+
 
 }
