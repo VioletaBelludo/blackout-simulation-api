@@ -3,8 +3,8 @@ package com.volta.blackout_simulation_api.service;
 import com.volta.blackout_simulation_api.dto.SimulationResultDto;
 import com.volta.blackout_simulation_api.model.SimulationResult;
 import com.volta.blackout_simulation_api.repository.SimulationResultRepository;
-import org.hibernate.query.Page;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,12 +58,11 @@ public class SimulationResultServiceImpl implements SimulationResultService{
     }
 
     @Override
-    public Page getAllSimulationResult(Pageable pageable) {
+    public Page<SimulationResultDto> getAllSimulationResult(Pageable pageable) {
         List<SimulationResult> allSimulationResults = simulationResultRepository.findAll();
         List<SimulationResultDto> simulationResultDtoList = allSimulationResults.stream().map(simulationResult -> modelMapper
                 .map(simulationResult, SimulationResultDto.class)).toList();
-        return ResponseEntity.ok(simulationResultDtoList);
-
+        return (org.springframework.data.domain.Page<SimulationResultDto>) ResponseEntity.ok(simulationResultDtoList);
     }
 
     @Override

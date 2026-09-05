@@ -6,7 +6,7 @@ import lombok.*;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+//@AllArgsConstructor
 
 @Entity
 @Table(name = "nuclear_plant")
