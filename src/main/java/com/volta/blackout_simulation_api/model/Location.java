@@ -13,11 +13,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "location")
-public class Location {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected Long id;
+public class Location extends BaseEntity {
 
     @Column(name = "latitude")
     @NotNull

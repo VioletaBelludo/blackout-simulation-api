@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "power_plant")
+@Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
 public abstract class PowerPlant extends BaseEntity {
@@ -29,8 +30,8 @@ public abstract class PowerPlant extends BaseEntity {
     @NotBlank(message = "Invalid name. Name cannot be null or empty.")
     private String name;
 
-    @Column(name = "location")
-    @Embedded
+    @ManyToOne
+    @JoinColumn(name = "location_id")
     private Location location;
 
     @Column(name = "maxCapacityMW")

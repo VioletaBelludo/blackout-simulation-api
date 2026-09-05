@@ -16,9 +16,19 @@ import java.util.List;
 @Setter
 public class BlackoutSimulation extends BaseEntity {
 
-    @Column(name = "all_plants")
+    @ManyToMany
+    @JoinTable(
+            name = "simulation_power_plants",
+            joinColumns = @JoinColumn(name = "simulation_id"),
+            inverseJoinColumns = @JoinColumn(name = "power_plant_id")
+    )
     private List<PowerPlant> allPlants;
 
-    @Column(name = "minute_demands")
+    @ManyToMany
+    @JoinTable(
+            name = "simulation_minute_demands",
+            joinColumns = @JoinColumn(name = "minute_demands_id"),
+            inverseJoinColumns = @JoinColumn(name = "minute_demands_id")
+    )
     private MinuteDemand[] minuteDemands;
 }
