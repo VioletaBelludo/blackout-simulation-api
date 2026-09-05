@@ -1,11 +1,11 @@
 package com.volta.blackout_simulation_api.service;
 
-import com.volta.blackout_simulation_api.dto.LocationDto;
 import com.volta.blackout_simulation_api.dto.MinuteDemandDto;
-import com.volta.blackout_simulation_api.model.Location;
 import com.volta.blackout_simulation_api.model.MinuteDemand;
 import com.volta.blackout_simulation_api.repository.MinuteDemandRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -54,11 +54,11 @@ public class MinuteDemandServiceImpl implements  MinuteDemandService{
     }
 
     @Override
-    public ResponseEntity<List<MinuteDemandDto>> getAllMinuteDemands() {
+    public Page<MinuteDemandDto> getAllMinuteDemands(Pageable pageable) {
         List<MinuteDemand> allMinuteDemand = minuteDemandRepository.findAll();
         List<MinuteDemandDto> minuteDemandDtoList = allMinuteDemand.stream().map(minuteDemand -> modelMapper
                 .map(minuteDemand, MinuteDemandDto.class)).toList();
-        return ResponseEntity.ok(minuteDemandDtoList);
+        return (Page<MinuteDemandDto>) ResponseEntity.ok(minuteDemandDtoList);
     }
 
     @Override

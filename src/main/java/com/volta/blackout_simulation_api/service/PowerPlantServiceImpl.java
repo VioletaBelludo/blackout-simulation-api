@@ -1,12 +1,11 @@
 package com.volta.blackout_simulation_api.service;
 
-import com.volta.blackout_simulation_api.dto.LocationDto;
 import com.volta.blackout_simulation_api.dto.PowerPlantDto;
-import com.volta.blackout_simulation_api.model.Location;
-import com.volta.blackout_simulation_api.model.MinuteDemand;
 import com.volta.blackout_simulation_api.model.plant.PowerPlant;
 import com.volta.blackout_simulation_api.repository.PowerPlantRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -62,11 +61,11 @@ public class PowerPlantServiceImpl implements PowerPlantService{
     }
 
     @Override
-    public ResponseEntity<List<PowerPlantDto>> getAllPowerPlants() {
+    public Page<PowerPlantDto> getAllPowerPlants(Pageable pageable) {
         List<PowerPlant> allPowerPlants = powerPlantRepository.findAll();
         List<PowerPlantDto> powerPlantDtoList = allPowerPlants.stream().map(powerPlant -> modelMapper
                 .map(powerPlant, PowerPlantDto.class)).toList();
-        return ResponseEntity.ok(powerPlantDtoList);
+        return (Page<PowerPlantDto>) ResponseEntity.ok(powerPlantDtoList);
     }
 
     @Override

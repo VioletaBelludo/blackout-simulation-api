@@ -4,6 +4,8 @@ import com.volta.blackout_simulation_api.dto.LocationDto;
 import com.volta.blackout_simulation_api.model.Location;
 import com.volta.blackout_simulation_api.repository.LocationRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -54,11 +56,11 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public ResponseEntity<List<LocationDto>> getAllLocations() {
+    public Page<LocationDto> getAllLocations(Pageable pageable) {
         List<Location> allLocations = locationRepository.findAll();
         List<LocationDto> locationDtoList = allLocations.stream().map(location -> modelMapper
                 .map(location, LocationDto.class)).toList();
-        return ResponseEntity.ok(locationDtoList);
+        return (Page<LocationDto>) ResponseEntity.ok(locationDtoList);
     }
 
     @Override
