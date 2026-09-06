@@ -10,7 +10,6 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 @Entity
 @Table(name = "location")
 public class Location extends BaseEntity {

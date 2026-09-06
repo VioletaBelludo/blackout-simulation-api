@@ -8,8 +8,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @MappedSuperclass
-/*definir  clase padre cuyos atributos y mapeos son heredados, sin que esta clase se
-convierta en una tabla en la base de datos*/
 @Getter
 @Setter
 public class BaseEntity {

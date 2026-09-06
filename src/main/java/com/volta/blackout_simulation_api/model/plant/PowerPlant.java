@@ -13,12 +13,9 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 @Entity
 @Table(name = "power_plant")
 @Inheritance(strategy = InheritanceType.JOINED)
-@Getter
-@Setter
 public abstract class PowerPlant extends BaseEntity {
 
     @Column(name = "type")

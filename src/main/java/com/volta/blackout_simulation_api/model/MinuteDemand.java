@@ -11,11 +11,8 @@ import java.time.LocalTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 @Entity
 @Table(name = "minute_demand")
-@Getter
-@Setter
 public class MinuteDemand extends BaseEntity {
 
     @Column(name = "time")

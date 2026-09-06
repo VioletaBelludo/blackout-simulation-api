@@ -10,11 +10,8 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 @Entity
 @Table(name = "renewable_plant")
-@Getter
-@Setter
 public class RenewablePlant extends PowerPlant {
 
     @Column(name = "efficiency")

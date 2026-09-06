@@ -7,9 +7,9 @@ import java.util.List;
 
 public class BlackoutSimulationDto {
     private List<PowerPlant> allPlants;
-    private MinuteDemand[] minuteDemands;
+    private List<MinuteDemand> minuteDemands;
 
-    public BlackoutSimulationDto(Long id, List<PowerPlant> allPlants, MinuteDemand[] minuteDemands) {
+    public BlackoutSimulationDto(Long id, List<PowerPlant> allPlants, List<MinuteDemand> minuteDemands) {
         this.allPlants = allPlants;
         this.minuteDemands = minuteDemands;
     }

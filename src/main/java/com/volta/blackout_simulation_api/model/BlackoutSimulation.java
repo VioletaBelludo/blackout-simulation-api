@@ -9,11 +9,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 @Entity
 @Table(name = "blackout_simulation")
-@Getter
-@Setter
 public class BlackoutSimulation extends BaseEntity {
 
     @ManyToMany
@@ -30,5 +27,5 @@ public class BlackoutSimulation extends BaseEntity {
             joinColumns = @JoinColumn(name = "minute_demands_id"),
             inverseJoinColumns = @JoinColumn(name = "minute_demands_id")
     )
-    private MinuteDemand[] minuteDemands;
+    private List<MinuteDemand> minuteDemands;
 }

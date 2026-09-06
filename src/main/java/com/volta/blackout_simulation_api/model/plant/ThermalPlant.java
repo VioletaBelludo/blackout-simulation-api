@@ -9,11 +9,8 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 @Entity
 @Table(name = "thermal_plant")
-@Getter
-@Setter
 public class ThermalPlant extends PowerPlant {
 
     @Column(name = "thermal_fuel_type")

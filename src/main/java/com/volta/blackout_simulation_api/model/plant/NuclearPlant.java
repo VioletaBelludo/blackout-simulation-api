@@ -6,12 +6,8 @@ import lombok.*;
 
 @Data
 @NoArgsConstructor
-//@AllArgsConstructor
-
 @Entity
 @Table(name = "nuclear_plant")
-@Getter
-@Setter
 public class NuclearPlant extends PowerPlant {
 
 }
