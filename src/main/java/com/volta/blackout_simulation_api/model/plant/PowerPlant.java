@@ -20,7 +20,7 @@ public abstract class PowerPlant extends BaseEntity {
 
     @Column(name = "type")
     @Enumerated(EnumType.STRING)
-    @NotBlank(message = "Invalid type. Type cannot be null or empty.")
+    @NotNull(message = "Invalid type. Type cannot be null or empty.")
     private PlantType type;
 
     @Column(name = "name")

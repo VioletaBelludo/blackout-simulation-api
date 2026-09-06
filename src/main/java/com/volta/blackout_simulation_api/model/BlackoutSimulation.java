@@ -16,7 +16,7 @@ public class BlackoutSimulation extends BaseEntity {
     @ManyToMany
     @JoinTable(
             name = "simulation_power_plants",
-            joinColumns = @JoinColumn(name = "simulation_id"),
+            joinColumns = @JoinColumn(name = "blackout_simulation_id"),
             inverseJoinColumns = @JoinColumn(name = "power_plant_id")
     )
     private List<PowerPlant> allPlants;
@@ -24,8 +24,8 @@ public class BlackoutSimulation extends BaseEntity {
     @ManyToMany
     @JoinTable(
             name = "simulation_minute_demands",
-            joinColumns = @JoinColumn(name = "minute_demands_id"),
-            inverseJoinColumns = @JoinColumn(name = "minute_demands_id")
+            joinColumns = @JoinColumn(name = "blackout_simulation_id"),
+            inverseJoinColumns = @JoinColumn(name = "minute_demand_id")
     )
     private List<MinuteDemand> minuteDemands;
 }
