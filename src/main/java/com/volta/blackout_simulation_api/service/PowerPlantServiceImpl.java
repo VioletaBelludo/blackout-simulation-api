@@ -62,10 +62,8 @@ public class PowerPlantServiceImpl implements PowerPlantService{
 
     @Override
     public Page<PowerPlantDto> getAllPowerPlants(Pageable pageable) {
-        List<PowerPlant> allPowerPlants = powerPlantRepository.findAll();
-        List<PowerPlantDto> powerPlantDtoList = allPowerPlants.stream().map(powerPlant -> modelMapper
-                .map(powerPlant, PowerPlantDto.class)).toList();
-        return (Page<PowerPlantDto>) ResponseEntity.ok(powerPlantDtoList);
+        return powerPlantRepository.findAll(pageable)
+                .map(powerPlant -> modelMapper.map(powerPlant, PowerPlantDto.class));
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.volta.blackout_simulation_api.service;
 
-import com.volta.blackout_simulation_api.dto.BlackoutSimulationDto;
 import com.volta.blackout_simulation_api.model.*;
 import com.volta.blackout_simulation_api.model.plant.PlantState;
 import com.volta.blackout_simulation_api.model.plant.PlantType;
@@ -9,9 +8,8 @@ import com.volta.blackout_simulation_api.model.plant.RenewablePlant;
 import com.volta.blackout_simulation_api.repository.BlackoutSimulationRepository;
 import com.volta.blackout_simulation_api.repository.MinuteDemandRepository;
 import com.volta.blackout_simulation_api.repository.PowerPlantRepository;
-import org.modelmapper.ModelMapper;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.volta.blackout_simulation_api.repository.SimulationResultRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,30 +20,39 @@ import java.util.stream.Collectors;
 @Service
 public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
     private static final double MIN_REQUIRED_STABILITY = 0.7;
+    private static final int SIMULATION_DAYS = 36;
 
     private final PowerPlantRepository powerPlantRepository;
     private final MinuteDemandRepository minuteDemandRepository;
+    private final SimulationResultRepository simulationResultRepository;
+    private final BlackoutSimulationRepository blackoutSimulationRepository;
 
 
     public BlackoutSimulationServiceImpl(PowerPlantRepository powerPlantRepository,
-                                         MinuteDemandRepository minuteDemandRepository) {
+                                         MinuteDemandRepository minuteDemandRepository, SimulationResultRepository simulationResultRepository, BlackoutSimulationRepository blackoutSimulationRepository) {
         this.powerPlantRepository = powerPlantRepository;
         this.minuteDemandRepository = minuteDemandRepository;
+        this.simulationResultRepository = simulationResultRepository;
+        this.blackoutSimulationRepository = blackoutSimulationRepository;
     }
 
     @Override
-    public List<SimulationResult> runSimulation(LocalDateTime blackoutStart){
+    @Transactional
+    public List<SimulationResult> runSimulation(LocalDateTime blackoutStart) {
         List<SimulationResult> results = new ArrayList<>();
-        initializeBlackout(blackoutStart);
+        List<PowerPlant> powerPlants = powerPlantRepository.findAll();
+        List<MinuteDemand> minuteDemands = minuteDemandRepository.findAll();
 
-        for (int minute = 0; minute < 36 * 60; minute++){
+        initializeBlackout(powerPlants, blackoutStart);
+
+        for (int minute = 0; minute < SIMULATION_DAYS * 60; minute++) {
             LocalDateTime currentTime = blackoutStart.plusMinutes(minute);
             LocalTime currentTimeOfDay = currentTime.toLocalTime();
             int index = (currentTimeOfDay.toSecondOfDay()) / 60 % 1440;
-            double currentDemand = minuteDemandRepository.findAll().get(index).getMegawatts();
+            double currentDemand = minuteDemands.get(index).getMegawatts();
 
-            updatePlantStates(currentTime);
-            List<PowerPlant> availablePlants = getAvailableOnlinePlants(currentTimeOfDay);
+            updatePlantStates(powerPlants, currentTime);
+            List<PowerPlant> availablePlants = getAvailableOnlinePlants(powerPlants, currentTimeOfDay);
 
             // Prioritize renewables by efficiency (descending), maintaining original order if tied
             List<PowerPlant> sortedPlants = availablePlants.stream()
@@ -55,7 +62,7 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
 
                         if (aRen && bRen) {
                             double effA = ((RenewablePlant) a).getEfficiency();
-                            double effB = ((RenewablePlant) a).getEfficiency();
+                            double effB = ((RenewablePlant) b).getEfficiency();
                             return Double.compare(effB, effA); // Most efficient first
                         } else if (aRen) {
                             return -1;
@@ -94,7 +101,9 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
             }
 
             // Calculate current stability
-            double currentStability = calculateWeightedStabilityByPlant(generatedByPlant) / totalGenerated;
+            double currentStability = totalGenerated != 0.0
+                    ? calculateWeightedStabilityByPlant(generatedByPlant) / totalGenerated
+                    : 0.0;
 
             // If minimum stability is not reached, adjust:
             if (currentStability < MIN_REQUIRED_STABILITY) {
@@ -109,7 +118,9 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
                     double removed = entry.getValue();
                     generatedByPlant.remove(renewable);
                     totalGenerated -= removed;
-                    currentStability = calculateWeightedStabilityByPlant(generatedByPlant) / totalGenerated;
+                    currentStability = totalGenerated != 0.0
+                            ? calculateWeightedStabilityByPlant(generatedByPlant) / totalGenerated
+                            : 0.0;
                     if (currentStability >= MIN_REQUIRED_STABILITY) break;
                 }
 
@@ -120,7 +131,9 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
                 totalGenerated = addGeneration(nuclear, generatedByPlant, currentDemand, false, true);
 
                 // 3. If still insufficient, add thermal (ordered by stability)
-                currentStability = calculateWeightedStabilityByPlant(generatedByPlant) / totalGenerated;
+                currentStability = totalGenerated != 0.0
+                        ? calculateWeightedStabilityByPlant(generatedByPlant) / totalGenerated
+                        : 0.0;
                 if (currentStability < MIN_REQUIRED_STABILITY) {
                     List<PowerPlant> thermals = availablePlants.stream()
                             .filter(p -> !p.getType().isRenewable())
@@ -138,66 +151,68 @@ public class BlackoutSimulationServiceImpl implements BlackoutSimulationService{
                 generatedByType.merge(entry.getKey().getType(), entry.getValue(), Double::sum);
             }
 
-            double averageStability = totalGenerated != 0.0 ? calculateWeightedStabilityByPlant(generatedByPlant) / totalGenerated : 0.0;
+            double averageStability = totalGenerated != 0.0
+                    ? calculateWeightedStabilityByPlant(generatedByPlant) / totalGenerated
+                    : 0.0;
 
             results.add(new SimulationResult(currentTime, totalGenerated, currentDemand, averageStability, generatedByType));
         }
-        return results;
+
+        List<SimulationResult> savedResults = simulationResultRepository.saveAll(results);
+
+        BlackoutSimulation blackoutSimulation = new BlackoutSimulation(powerPlants, minuteDemands);
+        blackoutSimulationRepository.save(blackoutSimulation);
+
+        return savedResults;
     }
 
 
-    private void initializeBlackout(LocalDateTime blackoutStart) {
-
-        List<PowerPlant> powerPlants = powerPlantRepository.findAll();
-
-        for (int i = 0; i < powerPlants.size(); i++){
-            powerPlants.get(i).setState(PlantState.OFFLINE);
-            powerPlants.get(i).setRestartInitiationTime(blackoutStart);
+    private void initializeBlackout(List<PowerPlant> powerPlants, LocalDateTime blackoutStart) {
+        for (PowerPlant powerPlant : powerPlants) {
+            powerPlant.setState(PlantState.OFFLINE);
+            powerPlant.setRestartInitiationTime(blackoutStart);
         }
+        powerPlantRepository.saveAll(powerPlants);
     }
 
-    private void updatePlantStates(LocalDateTime currentTime){
-
-        List<PowerPlant> powerPlants = powerPlantRepository.findAll();
-
-        for (int i = 0; i < powerPlants.size(); i++) {
-            if (powerPlants.get(i).getState() == PlantState.OFFLINE &&
-                    powerPlants.get(i).getRestartInitiationTime().plus(powerPlants.get(i).getType().getRestartDuration()).isBefore(currentTime)){
-                powerPlants.get(i).setState(PlantState.ONLINE);
+    private void updatePlantStates(List<PowerPlant> powerPlants, LocalDateTime currentTime) {
+        for (PowerPlant powerPlant : powerPlants) {
+            if (powerPlant.getState() == PlantState.OFFLINE &&
+                    powerPlant.getRestartInitiationTime().plus(powerPlant.getType().getRestartDuration()).isBefore(currentTime)) {
+                powerPlant.setState(PlantState.ONLINE);
             }
         }
     }
 
-    private List<PowerPlant> getAvailableOnlinePlants(LocalTime time) {
+    private List<PowerPlant> getAvailableOnlinePlants(List<PowerPlant> powerPlants, LocalTime time) {
         return powerPlantRepository.findAll().stream().filter(p -> p.getState() == PlantState.ONLINE)
                 .filter(p -> !time.isBefore(p.getType().getAvailableFromTime()) && !time.isAfter(p.getType().getAvailableToTime()))
                 .collect(Collectors.toList());
     }
 
     private double addGeneration(List<PowerPlant> plants, Map<PowerPlant, Double> map, double demand,
-                                 boolean onlyRenewables, boolean onlyNuclear){
+                                 boolean onlyRenewables, boolean onlyNuclear) {
 
         double total = map.values().stream().mapToDouble(Double::doubleValue).sum();
-        List<PowerPlant> powerPlants = powerPlantRepository.findAll();
 
-        for (int i = 0; i < powerPlants.size(); i++){
-            if (map.containsKey(powerPlants.get(i))) continue;
+        for (PowerPlant plant : plants) {
+            if (map.containsKey(plant)) continue;
 
-            if(((onlyRenewables && !powerPlants.get(i).getType().isRenewable())
-                    || (onlyNuclear && !(powerPlants.get(i).getType().equals(PlantType.NUCLEAR))
-                    || (!onlyRenewables && !onlyNuclear && (powerPlants.get(i).getType().isRenewable() || powerPlants.get(i).getType().equals(PlantType.NUCLEAR)))))){
-                continue;
-            }
+            boolean isRenewable = plant.getType().isRenewable();
+            boolean isNuclear = plant.getType().equals(PlantType.NUCLEAR);
 
-            PowerPlant current = powerPlants.get(i);
-            double capacity = (current instanceof RenewablePlant renewablePlant)
-                    ? current.getMaxCapacityMW() * renewablePlant.getEfficiency()
-                    : current.getMaxCapacityMW();
+            if (onlyRenewables && !isRenewable) continue;
+            if (onlyNuclear && !isNuclear) continue;
+            if (!onlyRenewables && !onlyNuclear && (isRenewable || isNuclear)) continue;
+
+            double capacity = (plant instanceof RenewablePlant renewablePlant)
+                    ? plant.getMaxCapacityMW() * renewablePlant.getEfficiency()
+                    : plant.getMaxCapacityMW();
             double remaining = demand - total;
             if (remaining <= 0) break;
 
             double toUse = Math.min(remaining, capacity);
-            map.put(powerPlants.get(i), toUse);
+            map.put(plant, toUse);
             total += toUse;
         }
         return total;

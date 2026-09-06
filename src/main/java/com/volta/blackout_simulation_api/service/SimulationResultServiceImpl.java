@@ -59,10 +59,8 @@ public class SimulationResultServiceImpl implements SimulationResultService{
 
     @Override
     public Page<SimulationResultDto> getAllSimulationResult(Pageable pageable) {
-        List<SimulationResult> allSimulationResults = simulationResultRepository.findAll();
-        List<SimulationResultDto> simulationResultDtoList = allSimulationResults.stream().map(simulationResult -> modelMapper
-                .map(simulationResult, SimulationResultDto.class)).toList();
-        return (org.springframework.data.domain.Page<SimulationResultDto>) ResponseEntity.ok(simulationResultDtoList);
+        return simulationResultRepository.findAll(pageable)
+                .map(simulationResult -> modelMapper.map(simulationResult, SimulationResultDto.class));
     }
 
     @Override

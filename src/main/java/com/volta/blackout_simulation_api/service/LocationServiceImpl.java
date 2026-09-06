@@ -57,10 +57,8 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     public Page<LocationDto> getAllLocations(Pageable pageable) {
-        List<Location> allLocations = locationRepository.findAll();
-        List<LocationDto> locationDtoList = allLocations.stream().map(location -> modelMapper
-                .map(location, LocationDto.class)).toList();
-        return (Page<LocationDto>) ResponseEntity.ok(locationDtoList);
+        return locationRepository.findAll(pageable)
+                .map(location -> modelMapper.map(location, LocationDto.class));
     }
 
     @Override

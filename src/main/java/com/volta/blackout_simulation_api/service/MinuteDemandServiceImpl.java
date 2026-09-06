@@ -55,10 +55,8 @@ public class MinuteDemandServiceImpl implements  MinuteDemandService{
 
     @Override
     public Page<MinuteDemandDto> getAllMinuteDemands(Pageable pageable) {
-        List<MinuteDemand> allMinuteDemand = minuteDemandRepository.findAll();
-        List<MinuteDemandDto> minuteDemandDtoList = allMinuteDemand.stream().map(minuteDemand -> modelMapper
-                .map(minuteDemand, MinuteDemandDto.class)).toList();
-        return (Page<MinuteDemandDto>) ResponseEntity.ok(minuteDemandDtoList);
+        return minuteDemandRepository.findAll(pageable)
+                .map(minuteDemand -> modelMapper.map(minuteDemand, MinuteDemandDto.class));
     }
 
     @Override
