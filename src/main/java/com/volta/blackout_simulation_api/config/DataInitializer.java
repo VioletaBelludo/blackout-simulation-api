@@ -70,8 +70,8 @@ public class DataInitializer implements CommandLineRunner {
                 plant.setType(plantType);
                 plant.setName(data[1].trim());
                 plant.setLocation(location);
-                // plant.setMaxCapacityMw(Double.parseDouble(data[5].trim())); // <-- Ajusta el nombre de tu setter
-                plant.setState(PlantState.ONLINE); // Estado por defecto
+                plant.setMaxCapacityMW(Double.parseDouble(data[5].trim()));
+                plant.setState(PlantState.ONLINE);
 
                 powerPlantRepository.save(plant);
             }
@@ -101,7 +101,7 @@ public class DataInitializer implements CommandLineRunner {
 
                 MinuteDemand demand = new MinuteDemand();
                 demand.setTime(LocalTime.parse(data[0].trim(), timeFormatter));
-                // demand.setDemandMw(Double.parseDouble(data[1].trim())); // <-- Ajusta el nombre de tu setter
+                demand.setMegawatts(Double.parseDouble(data[1].trim()));
 
                 demands.add(demand);
             }

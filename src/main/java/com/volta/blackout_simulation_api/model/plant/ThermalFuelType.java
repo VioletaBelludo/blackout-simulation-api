@@ -2,7 +2,8 @@ package com.volta.blackout_simulation_api.model.plant;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ThermalFuelType {NATURAL_GAS("Natural Gas"),
+public enum ThermalFuelType {
+    NATURAL_GAS("Natural Gas"),
     COAL("Coal"),
     FUEL_OIL("Fuel Oil"),
     BIOMASS("Biomass");

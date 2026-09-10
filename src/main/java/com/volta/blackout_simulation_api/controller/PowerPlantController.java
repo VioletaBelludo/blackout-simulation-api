@@ -38,6 +38,8 @@ public class PowerPlantController {
         return ResponseEntity.ok(powerPlantService.getAllPowerPlants(pageable));
     }
 
+    //Añadir get plant by type, by location, by name, y no se que más
+
     @PutMapping("/{id}")
     public ResponseEntity<PowerPlantDto> updatePowerPlant(@PathVariable Long id, @Valid @RequestBody PowerPlantDto powerPlantDto) {
         PowerPlant powerPlant = modelMapper.map(powerPlantDto, PowerPlant.class);
