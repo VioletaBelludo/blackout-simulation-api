@@ -24,7 +24,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
-    // Se inyectan los repositorios que tienes en tu proyecto
+
     private final PowerPlantRepository powerPlantRepository;
     private final LocationRepository locationRepository;
     private final MinuteDemandRepository minuteDemandRepository;
