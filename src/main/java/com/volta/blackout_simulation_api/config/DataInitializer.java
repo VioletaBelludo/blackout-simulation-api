@@ -152,6 +152,7 @@ public class DataInitializer implements CommandLineRunner {
             case COAL: return ThermalFuelType.COAL;
             case BIOMASS: return ThermalFuelType.BIOMASS;
             case FUEL_GAS: return FUEL_OIL;
+            default: return NATURAL_GAS;
         }
     }
 }
