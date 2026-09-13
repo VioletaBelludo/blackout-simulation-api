@@ -12,6 +12,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import javax.swing.text.TabExpander;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -19,6 +20,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.volta.blackout_simulation_api.model.plant.ThermalFuelType.FUEL_OIL;
+import static com.volta.blackout_simulation_api.model.plant.ThermalFuelType.NATURAL_GAS;
 
 @Slf4j
 @Component
@@ -144,12 +148,10 @@ public class DataInitializer implements CommandLineRunner {
 
     private ThermalFuelType mapThermalFuelType(PlantType plantType) {
         switch (plantType) {
+            case COMBINED_CYCLE: return  ThermalFuelType.NATURAL_GAS;
             case COAL: return ThermalFuelType.COAL;
             case BIOMASS: return ThermalFuelType.BIOMASS;
-            case COMBINED_CYCLE:
-            case FUEL_GAS:
-                return ThermalFuelType.NATURAL_GAS;
-            default: return ThermalFuelType.NATURAL_GAS;
+            case FUEL_GAS: return FUEL_OIL;
         }
     }
 }
